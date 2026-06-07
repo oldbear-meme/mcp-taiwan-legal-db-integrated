@@ -64,6 +64,55 @@ PARTY_ROLE_PATTERN = _build_role_pattern()
 CAUSE_PATTERN = re.compile(r'(?:間|因)(?:請求)?(.{2,20}?)事件')
 
 
+def extract_total_count(html: str) -> int | None:
+    """從搜尋結果頁面解析真實總筆數
+
+    司法院網站通常會顯示「共 XXX 筆」或「查獲 XXX 筆」
+    可能的位置：
+    - <span id="hlCount">共 2,345 筆</span>
+    - <div class="result-info">查獲 1,234 筆</div>
+    - 或其他類似格式
+
+    Returns:
+        總筆數（整數），如果找不到則返回 None
+    """
+    soup = BeautifulSoup(html, "lxml")
+
+    # 嘗試多種可能的選擇器
+    count_selectors = [
+        "#hlCount",  # 可能的 ID
+        ".result-count",  # 可能的 class
+        ".result-info",
+        "span[id*='Count']",  # 包含 Count 的 ID
+        "span[id*='count']",
+    ]
+
+    for selector in count_selectors:
+        element = soup.select_one(selector)
+        if element:
+            text = element.get_text()
+            # 用正則提取數字（支援千分位逗號）
+            match = re.search(r'[共查獲找到有]\s*([0-9,]+)\s*筆', text)
+            if match:
+                count_str = match.group(1).replace(',', '')
+                try:
+                    return int(count_str)
+                except ValueError:
+                    pass
+
+    # 如果上述方法都失敗，嘗試在整個頁面文字中搜尋
+    page_text = soup.get_text()
+    match = re.search(r'[共查獲找到有]\s*([0-9,]+)\s*筆', page_text)
+    if match:
+        count_str = match.group(1).replace(',', '')
+        try:
+            return int(count_str)
+        except ValueError:
+            pass
+
+    return None
+
+
 def parse_search_results(html: str) -> list[dict]:
     """解析裁判書搜尋結果頁面（iframe 中的 qryresultlst.aspx）
 
@@ -269,7 +318,7 @@ def _strip_inline_tags(html: str) -> str:
 
 
 def parse_judgment_page(html: str) -> dict:
-    """解析裁判書全文頁面（printData.aspx）"""
+    """解析裁判書全文頁面（data.aspx）"""
     soup = BeautifulSoup(html, "lxml")
 
     result = {
@@ -564,7 +613,7 @@ def _load_known_statute_names() -> set[str]:
     pcode_path = Path(__file__).resolve().parent.parent / "data" / "pcode_all.json"
     names = set()
     try:
-        with open(pcode_path, "r") as f:
+        with open(pcode_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         names = set(data["pcode_map"].keys())
     except (FileNotFoundError, KeyError):
