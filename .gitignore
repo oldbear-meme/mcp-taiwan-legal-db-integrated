@@ -51,3 +51,10 @@ test_query_decision*.py
 search_results*.txt
 pytest.ini
 PR_DRAFT.md
+
+# 內建資料（覆蓋上面的 data/ 與 *.db 排除；快取與本機狀態仍不入庫）
+!mcp_server/data/
+mcp_server/data/cache/
+!mcp_server/data/pcc_letters.db
+mcp_server/data/self_update_state.json
+mcp_server/data/*.tmp

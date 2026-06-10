@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## [1.1.0] - 2026-06-10（整合版）
+
+基於 [AXK1990/mcp-taiwan-legal-db-enhanced](https://github.com/AXK1990/mcp-taiwan-legal-db-enhanced) 1.0.0 的整合版本
+
+### Added（新增功能）
+
+#### 🏗️ 工程會函釋查詢（全新）
+- `search_pcc_letters` - 搜尋行政院公共工程委員會「政府採購法規解釋函令及相關函文」
+  - 支援關鍵字、採購法條號、法規名稱、發文字號、日期區間、現行有效篩選
+  - 內建 3,600+ 則函釋本地快取（1988–2026），離線查詢零延遲
+- `get_pcc_letter` - 取得單則函釋全文（含主旨、說明、法規條號、現行有效狀態、來源連結）
+- 資料來源：planpe.pcc.gov.tw（公開資訊）；`scripts/` 內附全量重建工具
+
+#### 🔄 自動更新（全新）
+- `mcp_server.pcc_updater` - 工程會函釋增量更新
+  - 伺服器啟動時背景檢查，每 7 天自動增量抓取新函釋（由新到舊掃到無新資料即停）
+  - 禮貌頻率 1.5 秒/請求；失敗只記警告，不影響查詢
+- `mcp_server.self_update` - 程式碼自我更新
+  - 每日最多一次檢查 GitHub main 分支，有新 commit 即下載覆蓋程式碼（下次重啟生效）
+  - 本地資料（pcode_all.json、law_histories.json、pcc_letters.db）一律保留
+  - `TWLEGAL_SELF_UPDATE=0` 可停用；`TWLEGAL_REPO=owner/name` 可改追蹤其他倉庫
+- 沿用原版 `mcp_server.updater`（法規清單每週六自動更新）
+
+---
+
 ## [1.0.0] - 2026-05-31
 
 基於 [lawchat-oss/mcp-taiwan-legal-db](https://github.com/lawchat-oss/mcp-taiwan-legal-db) 的增強版本

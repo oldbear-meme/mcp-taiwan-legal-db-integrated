@@ -1,7 +1,7 @@
 [project]
-name = "mcp-taiwan-legal-db-enhanced"
-version = "1.0.0"
-description = "MCP server for querying Taiwan (ROC) judicial judgments and the national regulation database"
+name = "mcp-taiwan-legal-db-integrated"
+version = "1.1.0"
+description = "MCP server for querying Taiwan (ROC) judicial judgments, the national regulation database, and PCC procurement interpretation letters, with built-in auto-update"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
@@ -9,7 +9,7 @@ authors = [
     { name = "LawChat", email = "opensource@lawchat.com.tw" },
     { name = "AXK1990 (Enhanced version maintainer)" },
 ]
-keywords = ["mcp", "taiwan", "legal", "regulation", "judicial", "judgment"]
+keywords = ["mcp", "taiwan", "legal", "regulation", "judicial", "judgment", "procurement", "pcc"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -46,11 +46,12 @@ dev = [
 ]
 
 [project.scripts]
-mcp-taiwan-legal-db-enhanced = "mcp_server.server:mcp.run"
+mcp-taiwan-legal-db-integrated = "mcp_server.server:mcp.run"
 
 [project.urls]
-Homepage = "https://github.com/AXK1990/mcp-taiwan-legal-db-enhanced"
-Issues = "https://github.com/AXK1990/mcp-taiwan-legal-db-enhanced/issues"
+Homepage = "https://github.com/AXK1990/mcp-taiwan-legal-db-integrated"
+Issues = "https://github.com/AXK1990/mcp-taiwan-legal-db-integrated/issues"
+"Enhanced Version" = "https://github.com/AXK1990/mcp-taiwan-legal-db-enhanced"
 "Original Project" = "https://github.com/lawchat-oss/mcp-taiwan-legal-db"
 
 [build-system]
@@ -61,7 +62,7 @@ build-backend = "setuptools.build_meta"
 include = ["mcp_server*"]
 
 [tool.setuptools.package-data]
-mcp_server = ["data/*.json"]
+mcp_server = ["data/*.json", "data/*.db"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

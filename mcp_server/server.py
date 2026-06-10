@@ -22,6 +22,7 @@ from mcp_server.tools.regulations import (
     _PCODE_ALL, _PCODE_REVERSE, _ABOLISHED_SET,
     reload_pcode_all,
 )
+from mcp_server.tools import pcc_letters as _pcc
 
 # 日誌設定
 logging.basicConfig(
@@ -54,6 +55,26 @@ async def _maybe_update_pcode_all():
         logger.info("pcode_all.json 更新完成")
     except Exception as e:
         logger.warning("pcode_all.json 更新失敗: %s", e)
+
+
+async def _maybe_update_pcc_letters():
+    """啟動時檢查工程會函釋庫（每 7 天增量抓新函釋，失敗不影響查詢）"""
+    try:
+        from mcp_server.pcc_updater import maybe_update
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, maybe_update)
+    except Exception as e:
+        logger.warning("pcc_letters.db 更新失敗: %s", e)
+
+
+async def _maybe_self_update():
+    """啟動時檢查 GitHub 是否有新版程式碼（每天最多一次，下次重啟生效）"""
+    try:
+        from mcp_server.self_update import maybe_self_update
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, maybe_self_update)
+    except Exception as e:
+        logger.warning("程式碼自我更新失敗: %s", e)
 
 
 def _log_background_task_exception(task: asyncio.Task) -> None:
@@ -91,6 +112,16 @@ async def lifespan(server: FastMCP):
     )
     _pcode_task.add_done_callback(_log_background_task_exception)
 
+    _pcc_task = asyncio.create_task(
+        _maybe_update_pcc_letters(), name="pcc_letters_update"
+    )
+    _pcc_task.add_done_callback(_log_background_task_exception)
+
+    _self_update_task = asyncio.create_task(
+        _maybe_self_update(), name="self_update"
+    )
+    _self_update_task.add_done_callback(_log_background_task_exception)
+
     # WAF cookies 預熱：沒預熱的話，第一個請求會在 search handler 內同步等
     # Playwright warmup，使用者看到的只會是籠統的「搜尋逾時」。
     _waf_task = asyncio.create_task(waf.ensure_ready(), name="waf_warmup")
@@ -111,8 +142,9 @@ async def lifespan(server: FastMCP):
 mcp = FastMCP(
     name="台灣法律資料庫",
     instructions=(
-        "查詢司法院裁判書、全國法規資料庫、大法官解釋（釋字）與憲法法庭裁判（憲判字）的 MCP 工具。"
-        "釋字/憲判字預設層與理由書從本地快取即時回傳，無需連網。"
+        "查詢司法院裁判書、全國法規資料庫、大法官解釋（釋字）與憲法法庭裁判（憲判字）、"
+        "法令判解系統，以及行政院公共工程委員會「政府採購法規解釋函令」（工程會函釋）的 MCP 工具。"
+        "釋字/憲判字與工程會函釋從本地快取即時回傳，無需連網。"
     ),
     lifespan=lifespan,
 )
@@ -782,6 +814,77 @@ async def get_legal_interpretation(
         result.get("success"), result.get("cached", False),
     )
     return result
+
+
+# ============================================================
+# 工具 11：搜尋工程會函釋
+# ============================================================
+
+@mcp.tool()
+def search_pcc_letters(
+    keyword: str = "",
+    article_no: str = "",
+    law_name: str = "",
+    letter_no: str = "",
+    date_from: str = "",
+    date_to: str = "",
+    only_active: bool = True,
+    max_results: int = 20,
+    offset: int = 0,
+) -> dict:
+    """搜尋行政院公共工程委員會「政府採購法規解釋函令及相關函文」（工程會函釋）。
+
+    供採購法疑義、釋疑案、章則或分層負責審查引用採購法（及其子法）函釋時查證。
+    查的是本地快取（離線、零延遲），伺服器啟動時每 7 天自動增量更新。
+    回摘要清單，取全文用 get_pcc_letter。法規不限政府採購法，亦含
+    「機關委託技術服務廠商評選及計費辦法」等子法，可用 law_name 篩。
+
+    Args:
+        keyword: 主旨＋說明全文關鍵字（例：機關首長、契約變更、開口契約）
+        article_no: 採購法條號（例：22、63、101、22-1）
+        law_name: 法規名稱關鍵字（例：政府採購法、評選及計費辦法）
+        letter_no: 發文字號模糊比對（例：工程企字）
+        date_from: 發文日期下限（西元 ISO，例：2020-01-01）
+        date_to: 發文日期上限（西元 ISO）
+        only_active: 只回現行有效（排除停止適用），預設 True
+        max_results: 筆數上限（預設 20）
+        offset: 分頁偏移
+
+    Returns:
+        {success, total, returned, results:[{letter_id, letter_no, law_name,
+                                             articles, subject, issue_date_roc, status}]}
+    """
+    logger.info("search_pcc_letters: keyword=%r, article_no=%r, law_name=%r",
+                keyword, article_no, law_name)
+    return _pcc.search_pcc_letters(
+        keyword=keyword, article_no=article_no, law_name=law_name,
+        letter_no=letter_no, date_from=date_from, date_to=date_to,
+        only_active=only_active, max_results=max_results, offset=offset,
+    )
+
+
+# ============================================================
+# 工具 12：取得工程會函釋全文
+# ============================================================
+
+@mcp.tool()
+def get_pcc_letter(letter_id: str = "", letter_no: str = "") -> dict:
+    """取得單一工程會函釋全文（主旨、說明全文、法規、條號、發文日期、現行有效狀態、來源）。
+
+    letter_id 與 letter_no（發文字號）擇一提供。若 status 為 superseded/partial，
+    務必改引取代函釋或標註已停止適用，勿直接援用。
+
+    Args:
+        letter_id: 函釋 ID（從 search_pcc_letters 結果取得）
+        letter_no: 發文字號模糊比對（例：工程企字第11500052701號）
+
+    Returns:
+        {success, letter_id, letter_no, law_name, based_on, articles, subject,
+         full_text, issuer, issue_date_roc, issue_date, status, superseded_by,
+         status_note, source_url, fetched_at}
+    """
+    logger.info("get_pcc_letter: letter_id=%r, letter_no=%r", letter_id, letter_no)
+    return _pcc.get_pcc_letter(letter_id=letter_id, letter_no=letter_no)
 
 
 # ============================================================
