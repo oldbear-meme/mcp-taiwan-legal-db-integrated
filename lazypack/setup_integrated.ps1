@@ -99,7 +99,7 @@ Say "      OK：程式碼與函釋資料庫（$dbSize MB）就緒" "Green"
 Say "[4/7] 安裝套件（含 mcp SDK，連 pypi.org 下載，請耐心等）..." "Cyan"
 "===== 套件安裝記錄 $(Get-Date) =====" | Set-Content $PipLog
 (& $Py -m pip install --upgrade pip 2>&1)        | Tee-Object -FilePath $PipLog -Append | Out-Host
-(& $Py -m pip install -e "$App" 2>&1)            | Tee-Object -FilePath $PipLog -Append | Out-Host
+(& $Py -m pip install --no-warn-script-location -e "$App" 2>&1) | Tee-Object -FilePath $PipLog -Append | Out-Host
 $pipCode = $LASTEXITCODE
 Rep "[套件] pip install -e . 退出碼=$pipCode（記錄：$PipLog）"
 Say "      pip 退出碼：$pipCode" "Gray"
