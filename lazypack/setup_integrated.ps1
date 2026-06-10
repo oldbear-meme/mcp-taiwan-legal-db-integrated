@@ -67,7 +67,7 @@ Say "      OK：$pyVer" "Green"
 
 # ---- [3/7] 程式碼（整合版；舊版增補版會就地升級）----
 Say "[3/7] 取得整合版 MCP 程式碼 ..." "Cyan"
-$isIntegrated = Test-Path (Join-Path $App "mcp_server\pcc_updater.py")
+$isIntegrated = (Test-Path (Join-Path $App "mcp_server\pcc_updater.py")) -and (Test-Path (Join-Path $App "verify.py"))
 if (-not $isIntegrated) {
     $zip = Join-Path $Tmp "repo.zip"
     try { Invoke-WebRequest -Uri $RepoZip -OutFile $zip } catch {}
@@ -76,8 +76,16 @@ if (-not $isIntegrated) {
     Expand-Archive -Path $zip -DestinationPath $ex -Force
     $inner = Get-ChildItem $ex -Directory | Select-Object -First 1
     if (-not $inner) { Fail "解壓程式碼後找不到內容。" }
-    if (Test-Path $App) { Remove-Item $App -Recurse -Force }   # 舊版（增補版）就地升級
-    Move-Item $inner.FullName $App
+    # 就地「覆蓋」升級，不刪除整個 app：
+    # Claude 若還開著，舊版快取（data\cache\legal_mcp.db*）會被鎖住，
+    # 刪目錄會刪到一半失敗；robocopy 覆蓋則完全不碰快取檔。
+    New-Item -ItemType Directory -Force -Path $App | Out-Null
+    # 清掉先前失敗安裝可能殘留的 zip 內層資料夾
+    Get-ChildItem $App -Directory -Filter "mcp-taiwan-legal-db-*" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+    & robocopy $inner.FullName $App /E /NFL /NDL /NJH /NJS /NP | Out-Null
+    $rc = $LASTEXITCODE
+    Rep "[程式碼] robocopy 退出碼=$rc（0-7 皆為成功）"
+    if ($rc -ge 8) { Fail "複製程式碼失敗（robocopy 退出碼 $rc）。請完全結束 Claude 桌面版（工具列圖示右鍵 -> Quit）後重新執行本安裝。" }
 } else {
     Say "      已是整合版，沿用既有程式碼（啟動時會自動檢查 GitHub 新版）" "Gray"
 }
