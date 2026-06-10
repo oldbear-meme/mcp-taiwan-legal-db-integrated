@@ -35,7 +35,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_REPO = "AXK1990/mcp-taiwan-legal-db-integrated"
+DEFAULT_REPO = "oldbear-meme/mcp-taiwan-legal-db-integrated"
 BRANCH = "main"
 
 PACKAGE_DIR = Path(__file__).resolve().parent          # .../mcp_server

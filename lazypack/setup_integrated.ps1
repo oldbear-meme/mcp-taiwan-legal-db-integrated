@@ -15,7 +15,7 @@ try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::
 
 # ---- 路徑與參數 ----
 $PyUrl   = "https://github.com/astral-sh/python-build-standalone/releases/download/20260602/cpython-3.11.15+20260602-x86_64-pc-windows-msvc-install_only.tar.gz"
-$RepoZip = "https://codeload.github.com/AXK1990/mcp-taiwan-legal-db-integrated/zip/refs/heads/main"
+$RepoZip = "https://codeload.github.com/oldbear-meme/mcp-taiwan-legal-db-integrated/zip/refs/heads/main"
 $Root    = Join-Path $env:USERPROFILE "mcp-taiwan-legal-db-portable"
 $PyDir   = Join-Path $Root "python"
 $Py      = Join-Path $PyDir "python.exe"

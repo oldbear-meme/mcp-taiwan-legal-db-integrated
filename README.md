@@ -62,7 +62,7 @@
 sudo apt install python3-venv python3-pip
 
 # 1. Clone repo（整合版倉庫）
-git clone https://github.com/AXK1990/mcp-taiwan-legal-db-integrated.git
+git clone https://github.com/oldbear-meme/mcp-taiwan-legal-db-integrated.git
 cd mcp-taiwan-legal-db-integrated
 
 # 2. 建立並初始化虛擬環境
@@ -99,7 +99,7 @@ Windows 使用者請執行以下 PowerShell 指令（可整段複製貼上）：
 
 ```powershell
 # 1. Clone repo（整合版倉庫）
-git clone https://github.com/AXK1990/mcp-taiwan-legal-db-integrated.git
+git clone https://github.com/oldbear-meme/mcp-taiwan-legal-db-integrated.git
 cd mcp-taiwan-legal-db-integrated
 
 # 2. 建立並初始化虛擬環境
@@ -783,9 +783,9 @@ mcp-taiwan-legal-db-integrated/
 🔄 **三層自動更新**：法規清單、工程會函釋、程式碼本身
 
 **維護資訊**：
-- 整合版倉庫：[AXK1990/mcp-taiwan-legal-db-integrated](https://github.com/AXK1990/mcp-taiwan-legal-db-integrated)
+- 整合版倉庫：[oldbear-meme/mcp-taiwan-legal-db-integrated](https://github.com/oldbear-meme/mcp-taiwan-legal-db-integrated)
 - 增補版倉庫：[AXK1990/mcp-taiwan-legal-db-enhanced](https://github.com/AXK1990/mcp-taiwan-legal-db-enhanced)
-- 回報問題：[GitHub Issues](https://github.com/AXK1990/mcp-taiwan-legal-db-integrated/issues)
+- 回報問題：[GitHub Issues](https://github.com/oldbear-meme/mcp-taiwan-legal-db-integrated/issues)
 
 **重要聲明**：
 - 本增補版本由社群開發者個人維護，與原專案作者及維護者無關

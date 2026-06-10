@@ -49,8 +49,8 @@ dev = [
 mcp-taiwan-legal-db-integrated = "mcp_server.server:mcp.run"
 
 [project.urls]
-Homepage = "https://github.com/AXK1990/mcp-taiwan-legal-db-integrated"
-Issues = "https://github.com/AXK1990/mcp-taiwan-legal-db-integrated/issues"
+Homepage = "https://github.com/oldbear-meme/mcp-taiwan-legal-db-integrated"
+Issues = "https://github.com/oldbear-meme/mcp-taiwan-legal-db-integrated/issues"
 "Enhanced Version" = "https://github.com/AXK1990/mcp-taiwan-legal-db-enhanced"
 "Original Project" = "https://github.com/lawchat-oss/mcp-taiwan-legal-db"
 
